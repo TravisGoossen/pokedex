@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	pokeapi "pokedex/internal/pokeapi"
 )
 
 var commands = make(map[string]cliCommand)
@@ -29,7 +31,7 @@ func main() {
 	commands["map"] = cliCommand{
 		name:        "map",
 		description: "List the next 20 map location areas",
-		callback:    Map(),
+		callback:    pokeapi.Map,
 	}
 
 	scanner := bufio.NewScanner(os.Stdin)
@@ -42,12 +44,17 @@ func main() {
 		case "help":
 			err := commands["help"].callback()
 			if err != nil {
-				fmt.Printf("Error: %v\n", err)
+				fmt.Printf("error: %v\n", err)
+			}
+		case "map":
+			err := commands["map"].callback()
+			if err != nil {
+				fmt.Printf("error: %v\n", err)
 			}
 		case "exit":
 			err := commands["exit"].callback()
 			if err != nil {
-				fmt.Printf("Error: %v\n", err)
+				fmt.Printf("error: %v\n", err)
 			}
 		default:
 			fmt.Print("Unknown command\n")
