@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"pokedex/internal/pokecache"
 )
 
 type locationArea struct {
@@ -22,7 +23,7 @@ type Config struct {
 	PrevUrl string
 }
 
-func Map(cfg *Config) error {
+func Map(cfg *Config, cache *pokecache.Cache) error {
 	var url string
 	if cfg.NextUrl == "" {
 		url = "https://pokeapi.co/api/v2/location-area/"
@@ -30,16 +31,23 @@ func Map(cfg *Config) error {
 	if cfg.NextUrl != "" {
 		url = cfg.NextUrl
 	}
-	res, err := http.Get(url)
-	if err != nil {
-		return fmt.Errorf("error: %w", err)
+
+	body, entryFound := cache.Get(url)
+
+	if !entryFound {
+		res, err := http.Get(url)
+		if err != nil {
+			return fmt.Errorf("error: %w", err)
+		}
+		body, err = io.ReadAll(res.Body)
+		if err != nil {
+			return fmt.Errorf("error: %w", err)
+		}
+		cache.Add(url, body)
 	}
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		return fmt.Errorf("error: %w", err)
-	}
+
 	var locData locationArea
-	err = json.Unmarshal(body, &locData)
+	err := json.Unmarshal(body, &locData)
 	if err != nil {
 		return fmt.Errorf("error: %w", err)
 	}
@@ -52,22 +60,28 @@ func Map(cfg *Config) error {
 	return nil
 }
 
-func Mapb(cfg *Config) error {
+func Mapb(cfg *Config, cache *pokecache.Cache) error {
 	if cfg.PrevUrl == "" {
 		return fmt.Errorf("you're on the first page")
 	}
 	url := cfg.PrevUrl
 
-	res, err := http.Get(url)
-	if err != nil {
-		return fmt.Errorf("error: %w", err)
+	body, entryFound := cache.Get(url)
+
+	if !entryFound {
+		res, err := http.Get(url)
+		if err != nil {
+			return fmt.Errorf("error: %w", err)
+		}
+		body, err = io.ReadAll(res.Body)
+		if err != nil {
+			return fmt.Errorf("error: %w", err)
+		}
+		cache.Add(url, body)
 	}
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		return fmt.Errorf("error: %w", err)
-	}
+
 	var locData locationArea
-	err = json.Unmarshal(body, &locData)
+	err := json.Unmarshal(body, &locData)
 	if err != nil {
 		return fmt.Errorf("error: %w", err)
 	}

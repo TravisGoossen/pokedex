@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
-	pokeapi "pokedex/internal/pokeapi"
+	"pokedex/internal/pokeapi"
+	"pokedex/internal/pokecache"
 )
 
 var commands = make(map[string]cliCommand)
@@ -14,7 +16,7 @@ var commands = make(map[string]cliCommand)
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(*pokeapi.Config) error
+	callback    func(*pokeapi.Config, *pokecache.Cache) error
 }
 
 func main() {
@@ -40,6 +42,7 @@ func main() {
 	}
 
 	var cfg pokeapi.Config
+	cache := pokecache.NewCache(5 * time.Second)
 
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
@@ -49,22 +52,22 @@ func main() {
 		cleanedText := cleanInput(textInput)
 		switch cleanedText[0] {
 		case "help":
-			err := commands["help"].callback(&cfg)
+			err := commands["help"].callback(&cfg, cache)
 			if err != nil {
 				fmt.Printf("error: %v\n", err)
 			}
 		case "map":
-			err := commands["map"].callback(&cfg)
+			err := commands["map"].callback(&cfg, cache)
 			if err != nil {
 				fmt.Printf("error: %v\n", err)
 			}
 		case "mapb":
-			err := commands["mapb"].callback(&cfg)
+			err := commands["mapb"].callback(&cfg, cache)
 			if err != nil {
 				fmt.Println(err)
 			}
 		case "exit":
-			err := commands["exit"].callback(&cfg)
+			err := commands["exit"].callback(&cfg, cache)
 			if err != nil {
 				fmt.Printf("error: %v\n", err)
 			}
@@ -80,13 +83,13 @@ func cleanInput(text string) []string {
 	return finalText
 }
 
-func commandExit(cfg *pokeapi.Config) error {
+func commandExit(cfg *pokeapi.Config, cache *pokecache.Cache) error {
 	fmt.Print("Closing the Pokedex... Goodbye!\n")
 	os.Exit(0)
 	return nil
 }
 
-func commandHelp(cfg *pokeapi.Config) error {
+func commandHelp(cfg *pokeapi.Config, cache *pokecache.Cache) error {
 	fmt.Print("Welcome to the Pokedex!\n")
 	fmt.Print("Usage:\n\n")
 	for _, cmd := range commands {
