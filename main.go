@@ -16,7 +16,7 @@ var commands = make(map[string]cliCommand)
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(*pokeapi.Config, *pokecache.Cache) error
+	callback    func(*pokeapi.Config, *pokecache.Cache, ...string) error
 }
 
 func main() {
@@ -40,6 +40,11 @@ func main() {
 		description: "List the previous 20 map location areas",
 		callback:    pokeapi.Mapb,
 	}
+	commands["explore"] = cliCommand{
+		name:        "explore",
+		description: "List the pokemon that can be found in an area. Proper use: 'explore area-name'",
+		callback:    pokeapi.Explore,
+	}
 
 	var cfg pokeapi.Config
 	cache := pokecache.NewCache(5 * time.Second)
@@ -59,13 +64,25 @@ func main() {
 		case "map":
 			err := commands["map"].callback(&cfg, cache)
 			if err != nil {
-				fmt.Printf("error: %v\n", err)
+				fmt.Println(err)
 			}
 		case "mapb":
 			err := commands["mapb"].callback(&cfg, cache)
 			if err != nil {
 				fmt.Println(err)
 			}
+		case "explore":
+			if len(cleanedText) < 2 {
+				fmt.Println("No area name provided. Proper use: 'explore area-name'")
+			} else if len(cleanedText) >= 3 {
+				fmt.Println("The area name cannot contain spaces. Proper use: 'explore area-name'")
+			} else {
+				err := commands["explore"].callback(&cfg, cache, cleanedText[1])
+				if err != nil {
+					fmt.Println(err)
+				}
+			}
+
 		case "exit":
 			err := commands["exit"].callback(&cfg, cache)
 			if err != nil {
@@ -83,13 +100,13 @@ func cleanInput(text string) []string {
 	return finalText
 }
 
-func commandExit(cfg *pokeapi.Config, cache *pokecache.Cache) error {
+func commandExit(cfg *pokeapi.Config, cache *pokecache.Cache, args ...string) error {
 	fmt.Print("Closing the Pokedex... Goodbye!\n")
 	os.Exit(0)
 	return nil
 }
 
-func commandHelp(cfg *pokeapi.Config, cache *pokecache.Cache) error {
+func commandHelp(cfg *pokeapi.Config, cache *pokecache.Cache, args ...string) error {
 	fmt.Print("Welcome to the Pokedex!\n")
 	fmt.Print("Usage:\n\n")
 	for _, cmd := range commands {
