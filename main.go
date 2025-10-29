@@ -16,7 +16,7 @@ var commands = make(map[string]cliCommand)
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(*pokeapi.Config, *pokecache.Cache, ...string) error
+	callback    func(*pokeapi.Config, *pokecache.Cache, *pokeapi.Pokedex, ...string) error
 }
 
 func main() {
@@ -45,9 +45,16 @@ func main() {
 		description: "List the pokemon that can be found in an area. Proper use: 'explore area-name'",
 		callback:    pokeapi.Explore,
 	}
+	commands["catch"] = cliCommand{
+		name:        "catch",
+		description: "Attempt to catch the named pokemon",
+		callback:    pokeapi.Catch,
+	}
 
 	var cfg pokeapi.Config
 	cache := pokecache.NewCache(5 * time.Second)
+	var pokedex pokeapi.Pokedex
+	pokedex.PokemonCaught = make(map[string]pokeapi.Pokemon)
 
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
@@ -57,17 +64,17 @@ func main() {
 		cleanedText := cleanInput(textInput)
 		switch cleanedText[0] {
 		case "help":
-			err := commands["help"].callback(&cfg, cache)
+			err := commands["help"].callback(&cfg, cache, &pokedex)
 			if err != nil {
 				fmt.Printf("error: %v\n", err)
 			}
 		case "map":
-			err := commands["map"].callback(&cfg, cache)
+			err := commands["map"].callback(&cfg, cache, &pokedex)
 			if err != nil {
 				fmt.Println(err)
 			}
 		case "mapb":
-			err := commands["mapb"].callback(&cfg, cache)
+			err := commands["mapb"].callback(&cfg, cache, &pokedex)
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -77,14 +84,24 @@ func main() {
 			} else if len(cleanedText) >= 3 {
 				fmt.Println("The area name cannot contain spaces. Proper use: 'explore area-name'")
 			} else {
-				err := commands["explore"].callback(&cfg, cache, cleanedText[1])
+				err := commands["explore"].callback(&cfg, cache, &pokedex, cleanedText[1])
 				if err != nil {
 					fmt.Println(err)
 				}
 			}
-
+		case "catch":
+			if len(cleanedText) < 2 {
+				fmt.Println("No Pokemon entered. Proper use: 'catch pokemon-name'")
+			} else if len(cleanedText) >= 3 {
+				fmt.Println("Only one Pokemon can be caught at a time. Proper use: 'catch pokemon-name'")
+			} else {
+				err := commands["catch"].callback(&cfg, cache, &pokedex, cleanedText[1])
+				if err != nil {
+					fmt.Println(err)
+				}
+			}
 		case "exit":
-			err := commands["exit"].callback(&cfg, cache)
+			err := commands["exit"].callback(&cfg, cache, &pokedex)
 			if err != nil {
 				fmt.Printf("error: %v\n", err)
 			}
@@ -100,13 +117,13 @@ func cleanInput(text string) []string {
 	return finalText
 }
 
-func commandExit(cfg *pokeapi.Config, cache *pokecache.Cache, args ...string) error {
+func commandExit(cfg *pokeapi.Config, cache *pokecache.Cache, pokedex *pokeapi.Pokedex, args ...string) error {
 	fmt.Print("Closing the Pokedex... Goodbye!\n")
 	os.Exit(0)
 	return nil
 }
 
-func commandHelp(cfg *pokeapi.Config, cache *pokecache.Cache, args ...string) error {
+func commandHelp(cfg *pokeapi.Config, cache *pokecache.Cache, pokedex *pokeapi.Pokedex, args ...string) error {
 	fmt.Print("Welcome to the Pokedex!\n")
 	fmt.Print("Usage:\n\n")
 	for _, cmd := range commands {
