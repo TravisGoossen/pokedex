@@ -176,7 +176,7 @@ func Catch(cfg *Config, cache *pokecache.Cache, pokedex *Pokedex, args ...string
 	rolled := rand.Float64()
 
 	fmt.Printf("Throwing a Pokeball at %s...\n", pokemon.Name)
-	time.Sleep(300 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 
 	if rolled <= catchChance {
 		fmt.Printf("%v was caught!\n", pokemon.Name)

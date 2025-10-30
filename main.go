@@ -42,12 +42,12 @@ func main() {
 	}
 	commands["explore"] = cliCommand{
 		name:        "explore",
-		description: "List the pokemon that can be found in an area. Proper use: 'explore area-name'",
+		description: "List the pokemon that can be found in an area. Use: 'explore area-name'",
 		callback:    pokeapi.Explore,
 	}
 	commands["catch"] = cliCommand{
 		name:        "catch",
-		description: "Attempt to catch the named pokemon",
+		description: "Attempt to catch the named pokemon. Use: 'catch pokemon-name'",
 		callback:    pokeapi.Catch,
 	}
 
