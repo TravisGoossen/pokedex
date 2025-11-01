@@ -82,7 +82,8 @@ func Map(cfg *Config, cache *pokecache.Cache, pokedex *Pokedex, args ...string) 
 
 func Mapb(cfg *Config, cache *pokecache.Cache, pokedex *Pokedex, args ...string) error {
 	if cfg.PrevUrl == "" {
-		return fmt.Errorf("you're on the first page")
+		fmt.Println("You are on the first page")
+		return nil
 	}
 	url := cfg.PrevUrl
 
@@ -194,4 +195,16 @@ func (P *Pokedex) Add(newPokemon Pokemon) {
 		P.PokemonCaught[newPokemon.Name] = newPokemon
 		fmt.Printf("%v added to pokedex!\n", newPokemon.Name)
 	}
+}
+
+func ShowPokedex(cfg *Config, cache *pokecache.Cache, pokedex *Pokedex, args ...string) error {
+	if len(pokedex.PokemonCaught) == 0 {
+		fmt.Println("You have not yet caught any Pokemon!")
+		return nil
+	}
+	fmt.Println("Your Pokedex:")
+	for _, pokemon := range pokedex.PokemonCaught {
+		fmt.Printf(" - %s\n", pokemon.Name)
+	}
+	return nil
 }

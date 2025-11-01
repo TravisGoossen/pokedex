@@ -42,13 +42,18 @@ func main() {
 	}
 	commands["explore"] = cliCommand{
 		name:        "explore",
-		description: "List the pokemon that can be found in an area. Use: 'explore area-name'",
+		description: "List the Pokemon that can be found in an area. Use: 'explore area-name'",
 		callback:    pokeapi.Explore,
 	}
 	commands["catch"] = cliCommand{
 		name:        "catch",
-		description: "Attempt to catch the named pokemon. Use: 'catch pokemon-name'",
+		description: "Attempt to catch the named Pokemon. Use: 'catch pokemon-name'",
 		callback:    pokeapi.Catch,
+	}
+	commands["pokedex"] = cliCommand{
+		name:        "pokedex",
+		description: "Display all caught Pokemon",
+		callback:    pokeapi.ShowPokedex,
 	}
 
 	var cfg pokeapi.Config
@@ -99,6 +104,11 @@ func main() {
 				if err != nil {
 					fmt.Println(err)
 				}
+			}
+		case "pokedex":
+			err := commands["pokedex"].callback(&cfg, cache, &pokedex)
+			if err != nil {
+				fmt.Println(err)
 			}
 		case "exit":
 			err := commands["exit"].callback(&cfg, cache, &pokedex)
