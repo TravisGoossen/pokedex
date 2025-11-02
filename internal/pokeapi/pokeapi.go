@@ -41,6 +41,19 @@ type Pokemon struct {
 	Id             int    `json:"id"`
 	Name           string `json:"name"`
 	BaseExperience int    `json:"base_experience"`
+	Height         int    `json:"height"`
+	Weight         int    `json:"weight"`
+	Stats          []struct {
+		Base_stat int `json:"base_stat"`
+		Stat      struct {
+			Name string `json:"name"`
+		} `json:"stat"`
+	} `json:"stats"`
+	Types []struct {
+		Type struct {
+			Name string `json:"name"`
+		} `json:"type"`
+	} `json:"types"`
 }
 
 func Map(cfg *Config, cache *pokecache.Cache, pokedex *Pokedex, args ...string) error {
@@ -146,16 +159,21 @@ func Explore(cfg *Config, cache *pokecache.Cache, pokedex *Pokedex, args ...stri
 func Catch(cfg *Config, cache *pokecache.Cache, pokedex *Pokedex, args ...string) error {
 	pokemonName := args[0]
 	url := fmt.Sprintf("https://pokeapi.co/api/v2/pokemon/%s/", pokemonName)
-	res, err := http.Get(url)
-	if err != nil {
-		return fmt.Errorf("failed to get info on pokemon named: %v. error: %w", pokemonName, err)
+	body, entryFound := cache.Get(url)
+	if !entryFound {
+		res, err := http.Get(url)
+		if err != nil {
+			return fmt.Errorf("failed to get info on pokemon named: %v. error: %w", pokemonName, err)
+		}
+		body, err = io.ReadAll(res.Body)
+		cache.Add(url, body)
+		if err != nil {
+			return fmt.Errorf("failed to read response body. error: %w", err)
+		}
 	}
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		return fmt.Errorf("failed to read response body. error: %w", err)
-	}
+
 	var pokemon Pokemon
-	err = json.Unmarshal(body, &pokemon)
+	err := json.Unmarshal(body, &pokemon)
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal pokemon data. error: %w", err)
 	}
@@ -193,7 +211,7 @@ func (P *Pokedex) Add(newPokemon Pokemon) {
 	_, ok := P.PokemonCaught[newPokemon.Name]
 	if !ok {
 		P.PokemonCaught[newPokemon.Name] = newPokemon
-		fmt.Printf("%v added to pokedex!\n", newPokemon.Name)
+		fmt.Printf("%v added to pokedex! It can now be inspected.\n", newPokemon.Name)
 	}
 }
 
@@ -205,6 +223,27 @@ func ShowPokedex(cfg *Config, cache *pokecache.Cache, pokedex *Pokedex, args ...
 	fmt.Println("Your Pokedex:")
 	for _, pokemon := range pokedex.PokemonCaught {
 		fmt.Printf(" - %s\n", pokemon.Name)
+	}
+	return nil
+}
+
+func Inspect(cfg *Config, cache *pokecache.Cache, pokedex *Pokedex, args ...string) error {
+	pokemonName := args[0]
+	pokemon, ok := pokedex.PokemonCaught[pokemonName]
+	if !ok {
+		fmt.Printf("You don't yet have %v in your Pokedex.\n", pokemonName)
+		return nil
+	}
+	fmt.Printf("Name: %s\n", pokemon.Name)
+	fmt.Printf("Height: %d\n", pokemon.Height)
+	fmt.Printf("Weight: %d\n", pokemon.Weight)
+	fmt.Printf("Stats: \n")
+	for _, stat := range pokemon.Stats {
+		fmt.Printf("  -%s: %d\n", stat.Stat.Name, stat.Base_stat)
+	}
+	fmt.Printf("Types: \n")
+	for _, pokeType := range pokemon.Types {
+		fmt.Printf("  -%s\n", pokeType.Type.Name)
 	}
 	return nil
 }
