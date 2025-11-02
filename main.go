@@ -54,7 +54,7 @@ func main() {
 		name:        "pokedex",
 		description: "Display all caught Pokemon",
 		callback:    pokeapi.ShowPokedex,
-  }
+	}
 	commands["inspect"] = cliCommand{
 		name:        "inspect",
 		description: "Inspect a pokemon that is in your Pokedex. Use: 'insepct pokemon-name'",
@@ -114,6 +114,7 @@ func main() {
 			err := commands["pokedex"].callback(&cfg, cache, &pokedex)
 			if err != nil {
 				fmt.Println(err)
+			}
 		case "inspect":
 			if len(cleanedText) < 2 {
 				fmt.Println("No Pokemon entered. Proper use: 'inspect pokemon-name'")

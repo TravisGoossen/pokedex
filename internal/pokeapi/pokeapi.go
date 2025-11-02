@@ -95,8 +95,7 @@ func Map(cfg *Config, cache *pokecache.Cache, pokedex *Pokedex, args ...string) 
 
 func Mapb(cfg *Config, cache *pokecache.Cache, pokedex *Pokedex, args ...string) error {
 	if cfg.PrevUrl == "" {
-		fmt.Println("You are on the first page")
-		return nil
+		return fmt.Errorf("you're on the first page")
 	}
 	url := cfg.PrevUrl
 
