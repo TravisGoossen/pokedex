@@ -50,6 +50,11 @@ func main() {
 		description: "Attempt to catch the named pokemon. Use: 'catch pokemon-name'",
 		callback:    pokeapi.Catch,
 	}
+	commands["inspect"] = cliCommand{
+		name:        "inspect",
+		description: "Inspect a pokemon that is in your Pokedex. Use: 'insepct pokemon-name'",
+		callback:    pokeapi.Inspect,
+	}
 
 	var cfg pokeapi.Config
 	cache := pokecache.NewCache(5 * time.Second)
@@ -96,6 +101,17 @@ func main() {
 				fmt.Println("Only one Pokemon can be caught at a time. Proper use: 'catch pokemon-name'")
 			} else {
 				err := commands["catch"].callback(&cfg, cache, &pokedex, cleanedText[1])
+				if err != nil {
+					fmt.Println(err)
+				}
+			}
+		case "inspect":
+			if len(cleanedText) < 2 {
+				fmt.Println("No Pokemon entered. Proper use: 'inspect pokemon-name'")
+			} else if len(cleanedText) >= 3 {
+				fmt.Println("Only one Pokemon can be inspected at a time. Proper use: 'inspect pokemon-name'")
+			} else {
+				err := commands["inspect"].callback(&cfg, cache, &pokedex, cleanedText[1])
 				if err != nil {
 					fmt.Println(err)
 				}
